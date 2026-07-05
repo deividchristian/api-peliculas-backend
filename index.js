@@ -6,46 +6,37 @@ app.use(cors());
 app.use(express.json()); // Permite recibir datos en formato JSON
 
 // Nuestra "Base de datos" en memoria
-let carrito = [];
-let idActual = 1;
+// Nuestra "Base de datos" en memoria para Favoritos
+let favoritos = [];
+let idFavoritoActual = 1;
 
-// 1. CREATE: Agregar una película al carrito
-app.post('/api/carrito', (req, res) => {
-    const nuevaPelicula = {
-        id: idActual++,
+// 1. CREATE: Agregar a favoritos
+app.post('/api/favoritos', (req, res) => {
+    const nuevoFavorito = {
+        id: idFavoritoActual++,
         movieId: req.body.movieId,
         titulo: req.body.titulo,
-        precio: req.body.precio,
-        cantidad: req.body.cantidad,
-        poster: req.body.poster
+        poster: req.body.poster,
+        rating: req.body.rating,
+        fecha_guardado: req.body.fecha_guardado || new Date().toISOString()
     };
-    carrito.push(nuevaPelicula);
-    res.status(201).json(nuevaPelicula);
-});
-
-// 2. READ: Obtener todo el carrito
-app.get('/api/carrito', (req, res) => {
-    res.status(200).json(carrito);
-});
-
-// 3. UPDATE: Actualizar la cantidad de una película
-app.put('/api/carrito/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = carrito.findIndex(p => p.id === id);
-    
-    if (index !== -1) {
-        carrito[index].cantidad = req.body.cantidad;
-        res.status(200).json(carrito[index]);
-    } else {
-        res.status(404).json({ mensaje: "Película no encontrada" });
+    // Evitar duplicados por movieId
+    if (!favoritos.find(f => f.movieId === nuevoFavorito.movieId)) {
+        favoritos.push(nuevoFavorito);
     }
+    res.status(201).json(nuevoFavorito);
 });
 
-// 4. DELETE: Eliminar una película del carrito
-app.delete('/api/carrito/:id', (req, res) => {
+// 2. READ: Obtener todos los favoritos
+app.get('/api/favoritos', (req, res) => {
+    res.status(200).json(favoritos);
+});
+
+// 3. DELETE: Eliminar de favoritos (usando el id interno)
+app.delete('/api/favoritos/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    carrito = carrito.filter(p => p.id !== id);
-    res.status(200).json({ mensaje: "Eliminada correctamente" });
+    favoritos = favoritos.filter(f => f.id !== id);
+    res.status(200).json({ mensaje: "Favorito eliminado" });
 });
 
 // Arrancar el servidor
